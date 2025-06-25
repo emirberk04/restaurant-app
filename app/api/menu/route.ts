@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 export async function GET() {
   try {
-    const categories = await prisma.category.findMany({
+    const categories = await prisma.menuCategory.findMany({
       include: {
         menuItems: true,
       },

@@ -22,6 +22,7 @@
     "@types/nodemailer": "^6.4.17",
     "@types/react-datepicker": "^6.2.0",
     "date-fns": "^4.1.0",
+    "decimal.js": "^10.5.0",
     "framer-motion": "^10.16.4",
     "nanoid": "^5.1.5",
     "next": "14.0.4",

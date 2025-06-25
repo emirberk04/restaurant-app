@@ -3,12 +3,13 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-interface MenuItem {
+type MenuItemWithPrice = {
   id: number;
-  name: string;
-  description: string | null;
-  price: number;
-}
+  price: {
+    toString(): string;
+    toNumber(): number;
+  };
+};
 
 export async function POST(request: Request) {
   try {
@@ -24,16 +25,27 @@ export async function POST(request: Request) {
       },
     });
 
+    // Toplam tutarı hesapla
+    const totalAmount = menuItems.reduce((total: number, menuItem: MenuItemWithPrice) => {
+      const orderItem = items.find((item: { id: number }) => item.id === menuItem.id);
+      return total + (menuItem.price.toNumber() * (orderItem?.quantity || 1));
+    }, 0);
+
     // Sipariş oluştur
     const order = await prisma.order.create({
       data: {
-        tableId: body.tableId || 'default',
         status: 'PENDING',
+        totalAmount: totalAmount.toFixed(2),
         orderItems: {
-          create: items.map((item: { id: number; quantity: number }) => ({
-            menuItemId: item.id,
-            quantity: item.quantity,
-          })),
+          create: items.map((item: { id: number; quantity: number }) => {
+            const menuItem = menuItems.find((mi: MenuItemWithPrice) => mi.id === item.id);
+            const price = menuItem?.price || 0;
+            return {
+              menuItemId: item.id,
+              quantity: item.quantity,
+              unitPrice: typeof price === 'number' ? price.toString() : price.toString(),
+            };
+          }),
         },
       },
       include: {
