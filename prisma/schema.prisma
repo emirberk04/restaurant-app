@@ -9,22 +9,22 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // Kullanıcı modeli
 model User {
-  id           String        @id @default(cuid())
-  email        String        @unique
-  name         String
-  phone        String?
-  password     String
-  role         UserRole      @default(CUSTOMER)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  orders       Order[]
-  reservations Reservation[]
+  id            String        @id @default(cuid())
+  email         String        @unique
+  name          String
+  password      String
+  role          UserRole      @default(CUSTOMER)
+  phone         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  orders        Order[]
+  reservations  Reservation[]
 }
 
 enum UserRole {
@@ -34,84 +34,100 @@ enum UserRole {
 }
 
 // Menü kategorisi modeli
-model Category {
-  id          Int        @id @default(autoincrement())
+model MenuCategory {
+  id          Int         @id @default(autoincrement())
   name        String
   description String?
+  image       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
   menuItems   MenuItem[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+
+  @@map("menu_categories")
 }
 
 // Menü öğesi modeli
 model MenuItem {
-  id          Int         @id @default(autoincrement())
-  name        String
-  description String
-  price       Float
-  image       String
-  categoryId  Int
-  category    Category    @relation(fields: [categoryId], references: [id])
-  orderItems  OrderItem[]
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id           Int          @id @default(autoincrement())
+  name         String
+  description  String
+  price        Decimal      @db.Decimal(10, 2)
+  image        String
+  isAvailable  Boolean      @default(true)
+  categoryId   Int
+  category     MenuCategory @relation(fields: [categoryId], references: [id])
+  orderItems   OrderItem[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
   @@index([categoryId])
+  @@map("menu_items")
 }
 
 // Sipariş modeli
 model Order {
-  id           Int         @id @default(autoincrement())
-  tableId      String
-  table        Table       @relation(fields: [tableId], references: [id])
-  status       String      @default("PENDING")
-  customerNote String?
+  id           String      @id @default(cuid())
+  userId       String?
+  user         User?       @relation(fields: [userId], references: [id])
+  status       OrderStatus @default(PENDING)
+  totalAmount  Decimal     @db.Decimal(10, 2)
   orderItems   OrderItem[]
+  customerNote String?
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
-  User         User?       @relation(fields: [userId], references: [id])
-  userId       String?
 
-  @@index([tableId])
+  @@index([userId])
+  @@map("orders")
 }
 
 // Sipariş öğesi modeli
 model OrderItem {
-  id         Int      @id @default(autoincrement())
-  orderId    Int
-  order      Order    @relation(fields: [orderId], references: [id])
-  menuItemId Int
-  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
-  quantity   Int
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id          Int       @id @default(autoincrement())
+  orderId     String
+  order       Order     @relation(fields: [orderId], references: [id])
+  menuItemId  Int
+  menuItem    MenuItem  @relation(fields: [menuItemId], references: [id])
+  quantity    Int
+  unitPrice   Decimal   @db.Decimal(10, 2)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@index([orderId])
   @@index([menuItemId])
+  @@map("order_items")
 }
 
 // Rezervasyon modeli
 model Reservation {
-  id              String   @id @default(cuid())
+  id              String    @id @default(cuid())
+  userId          String?
+  user            User?     @relation(fields: [userId], references: [id])
   name            String
   email           String
   phoneNumber     String
   date            DateTime
   time            String
   numberOfGuests  Int
-  status          String   @default("PENDING")
+  status          ReservationStatus @default(PENDING)
   specialRequests String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  User            User?    @relation(fields: [userId], references: [id])
-  userId          String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("reservations")
 }
 
-// Masa modeli
-model Table {
-  id        String   @id
-  number    Int      @unique
-  orders    Order[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  DELIVERED
+  CANCELLED
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
 }
