@@ -1,21 +1,21 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
+
+const prisma = globalForPrisma.prisma ?? new PrismaClient();
+
+if (process.env.NODE_ENV !== 'production') {
+  globalForPrisma.prisma = prisma;
+}
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, email, date, time, numberOfGuests, specialRequests, phoneNumber } = body;
+    const { name, email, phoneNumber, date, time, numberOfGuests, specialRequests } = body;
 
-    if (!name || !email || !date || !time || !numberOfGuests || !phoneNumber) {
-      return NextResponse.json(
-        { error: 'Tüm zorunlu alanları doldurunuz' },
-        { status: 400 }
-      );
-    }
-
-    // Rezervasyonu veritabanına kaydet
     const reservation = await prisma.reservation.create({
       data: {
         name,
@@ -25,15 +25,14 @@ export async function POST(request: Request) {
         time,
         numberOfGuests,
         specialRequests,
-        status: 'PENDING'
-      }
+        status: 'PENDING',
+      },
     });
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       message: 'Rezervasyon başarıyla oluşturuldu',
-      reservation 
+      reservation,
     });
-
   } catch (error) {
     console.error('Rezervasyon hatası:', error);
     return NextResponse.json(
@@ -43,21 +42,12 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url);
-    const date = searchParams.get('date');
-    const status = searchParams.get('status');
-
-    const where: any = {};
-    if (date) where.date = new Date(date);
-    if (status) where.status = status;
-
     const reservations = await prisma.reservation.findMany({
-      where,
       orderBy: {
-        date: 'asc'
-      }
+        date: 'desc',
+      },
     });
 
     return NextResponse.json(reservations);
@@ -75,7 +65,7 @@ export async function PUT(request: Request) {
     const body = await request.json();
     const { reservationId, status } = body;
 
-    if (!reservationId || !status) {
+    if (!reservationId || !status || !['PENDING', 'CONFIRMED', 'CANCELLED'].includes(status)) {
       return NextResponse.json(
         { error: 'Geçersiz rezervasyon ID veya durum' },
         { status: 400 }
@@ -84,12 +74,12 @@ export async function PUT(request: Request) {
 
     const updatedReservation = await prisma.reservation.update({
       where: { id: reservationId },
-      data: { status }
+      data: { status },
     });
 
     return NextResponse.json({
       message: 'Rezervasyon durumu güncellendi',
-      reservation: updatedReservation
+      reservation: updatedReservation,
     });
   } catch (error) {
     console.error('Rezervasyon güncelleme hatası:', error);
