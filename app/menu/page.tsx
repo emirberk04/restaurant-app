@@ -8,9 +8,6 @@ import { useCartStore } from '@/store/cartStore'
 import { Dialog } from '@headlessui/react'
 import { XMarkIcon, ShoppingBagIcon } from '@heroicons/react/24/outline'
 import Image from 'next/image'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
 
 interface MenuItem {
   id: number;
@@ -64,6 +61,8 @@ export default function MenuPage() {
       try {
         const response = await fetch('/api/menu')
         const data = await response.json()
+        console.log('Menu data received:', data) // Debug log
+        
         // Add images to menu items
         const dataWithImages = data.map((category: Category) => ({
           ...category,
@@ -90,6 +89,17 @@ export default function MenuPage() {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
+  if (categories.length === 0) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-700 mb-2">No menu items found</h2>
+          <p className="text-gray-500">Please check back later.</p>
+        </div>
       </div>
     )
   }
