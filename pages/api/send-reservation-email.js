@@ -570,8 +570,8 @@ export default async function handler(req, res) {
 
     // Email addresses
     const customerEmail = reservation.email;
-    const restaurantEmail = process.env.RESTAURANT_EMAIL || 'emirberkalan2@gmail.com';
-    const fromEmail = process.env.EMAIL_FROM || 'Elegance Restaurant <noreply@elegancerestaurant.com>';
+    const restaurantEmail = 'emirberkalan2@gmail.com'; // Restaurant owner email
+    const fromEmail = process.env.EMAIL_FROM || 'Elegance Restaurant <onboarding@resend.dev>';
 
     console.log('📧 Email Configuration:');
     console.log('  - Customer Email:', customerEmail);
