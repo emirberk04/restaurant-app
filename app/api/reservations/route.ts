@@ -79,53 +79,59 @@ export async function POST(request: Request) {
     console.log('🗄️ Created Reservation:', reservation);
     console.log('🆔 Reservation ID:', reservation.id);
 
-    // Send email notifications
+    // Send email notifications (non-blocking)
     console.log('📧 Attempting to send email notifications...');
-    try {
-      const emailData = {
-        reservation: {
-          id: reservation.id,
-          name: reservation.name,
-          email: reservation.email,
-          phoneNumber: reservation.phoneNumber,
-          date: reservation.date.toISOString().split('T')[0], // YYYY-MM-DD format
-          time: reservation.time,
-          numberOfGuests: reservation.numberOfGuests,
-          specialRequests: reservation.specialRequests,
-          status: reservation.status
+    
+    // Email sending should not block the reservation creation
+    setTimeout(async () => {
+      try {
+        const emailData = {
+          reservation: {
+            id: reservation.id,
+            name: reservation.name,
+            email: reservation.email,
+            phoneNumber: reservation.phoneNumber,
+            date: reservation.date.toISOString().split('T')[0], // YYYY-MM-DD format
+            time: reservation.time,
+            numberOfGuests: reservation.numberOfGuests,
+            specialRequests: reservation.specialRequests,
+            status: reservation.status
+          }
+        };
+
+        console.log('📧 Email Data:', emailData);
+
+        // Get the base URL
+        const url = new URL(request.url);
+        const baseUrl = `${url.protocol}//${url.host}`;
+        
+        console.log('🌐 Base URL:', baseUrl);
+        console.log('🔗 Email API URL:', `${baseUrl}/api/send-reservation-email`);
+
+        const emailResponse = await fetch(`${baseUrl}/api/send-reservation-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(emailData),
+        });
+
+        console.log('📧 Email API Response Status:', emailResponse.status);
+        
+        if (emailResponse.ok) {
+          const emailResult = await emailResponse.json();
+          console.log('📧 Email API Response:', emailResult);
+          console.log('✅ Email notifications sent successfully!');
+        } else {
+          const errorText = await emailResponse.text();
+          console.error('⚠️ Email API Error:', errorText);
+          console.error('⚠️ Email sending failed, but reservation was created');
         }
-      };
-
-      console.log('📧 Email Data:', emailData);
-
-      // Get the base URL
-      const url = new URL(request.url);
-      const baseUrl = `${url.protocol}//${url.host}`;
-      
-      console.log('🌐 Base URL:', baseUrl);
-      console.log('🔗 Email API URL:', `${baseUrl}/api/send-reservation-email`);
-
-      const emailResponse = await fetch(`${baseUrl}/api/send-reservation-email`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(emailData),
-      });
-
-      console.log('📧 Email API Response Status:', emailResponse.status);
-      const emailResult = await emailResponse.json();
-      console.log('📧 Email API Response:', emailResult);
-
-      if (!emailResponse.ok) {
-        console.error('⚠️ Email sending failed, but reservation was created');
-      } else {
-        console.log('✅ Email notifications sent successfully!');
+      } catch (emailError) {
+        console.error('❌ Email sending error:', emailError);
+        console.error('⚠️ Reservation created but email failed');
       }
-    } catch (emailError) {
-      console.error('❌ Email sending error:', emailError);
-      console.error('⚠️ Reservation created but email failed');
-    }
+    }, 100); // 100ms delay
 
     // Return success response
     const response = {
