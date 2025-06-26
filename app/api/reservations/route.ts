@@ -14,6 +14,8 @@ if (process.env.NODE_ENV !== 'production') {
 export async function POST(request: Request) {
   try {
     console.log('🚀 REZERVASYON API DEBUG - BAŞLANGIC');
+    console.log('🌐 Environment:', process.env.NODE_ENV);
+    console.log('🗄️ Database URL exists:', !!process.env.DATABASE_URL);
     
     const body = await request.json();
     console.log('📝 Request Body:', body);
@@ -47,8 +49,13 @@ export async function POST(request: Request) {
     }
 
     // Process date
+    console.log('🔄 Processing date...');
     const processedDate = new Date(date);
+    console.log('🔄 Date processed:', processedDate);
+    
+    console.log('🔄 Processing numberOfGuests...');
     const processedGuests = parseInt(numberOfGuests.toString());
+    console.log('🔄 Guests processed:', processedGuests);
     
     console.log('🔄 Processing Data:');
     console.log('  - Original date:', date);
@@ -70,14 +77,34 @@ export async function POST(request: Request) {
     console.log('🗄️ Database Insert Data:', reservationData);
     console.log('🔗 Attempting to create reservation in database...');
 
-    // Create reservation in database
-    const reservation = await prisma.reservation.create({
-      data: reservationData,
-    });
+    // Test database connection first
+    try {
+      console.log('🔍 Testing database connection...');
+      await prisma.$connect();
+      console.log('✅ Database connection successful');
+    } catch (dbConnectError) {
+      console.error('❌ Database connection failed:', dbConnectError);
+      throw new Error('Database connection failed');
+    }
 
-    console.log('✅ Database Insert Success!');
-    console.log('🗄️ Created Reservation:', reservation);
-    console.log('🆔 Reservation ID:', reservation.id);
+    // Create reservation in database
+    let reservation;
+    try {
+      console.log('💾 Creating reservation record...');
+      reservation = await prisma.reservation.create({
+        data: reservationData,
+      });
+      console.log('✅ Database Insert Success!');
+      console.log('🗄️ Created Reservation:', reservation);
+      console.log('🆔 Reservation ID:', reservation.id);
+    } catch (dbError) {
+      console.error('❌ Database Insert Error:', dbError);
+      console.error('❌ Database Error Details:', {
+        message: dbError instanceof Error ? dbError.message : String(dbError),
+        stack: dbError instanceof Error ? dbError.stack : 'No stack trace',
+      });
+      throw dbError;
+    }
 
     // Send email notifications (non-blocking)
     console.log('📧 Attempting to send email notifications...');
@@ -148,17 +175,32 @@ export async function POST(request: Request) {
     console.error('  - Error message:', error instanceof Error ? error.message : String(error));
     console.error('  - Error object:', error);
     console.error('  - Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error('  - Error name:', error instanceof Error ? error.name : 'Unknown');
     
-    if (error instanceof Error && error.message.includes('Unique constraint')) {
-      console.error('🔄 Duplicate reservation detected');
-      return NextResponse.json(
-        { error: 'Bu email ile zaten bir rezervasyon mevcut' },
-        { status: 409 }
-      );
+    // Check specific error types
+    if (error instanceof Error) {
+      if (error.message.includes('Unique constraint')) {
+        console.error('🔄 Duplicate reservation detected');
+        return NextResponse.json(
+          { error: 'Bu email ile zaten bir rezervasyon mevcut' },
+          { status: 409 }
+        );
+      }
+      
+      if (error.message.includes('Database connection failed')) {
+        console.error('🗄️ Database connection issue');
+        return NextResponse.json(
+          { error: 'Database bağlantı hatası' },
+          { status: 503 }
+        );
+      }
     }
 
     return NextResponse.json(
-      { error: 'Rezervasyon oluşturulurken bir hata oluştu' },
+      { 
+        error: 'Rezervasyon oluşturulurken bir hata oluştu',
+        details: process.env.NODE_ENV === 'development' ? error instanceof Error ? error.message : String(error) : undefined
+      },
       { status: 500 }
     );
   }
