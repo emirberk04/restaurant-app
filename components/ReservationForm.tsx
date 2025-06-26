@@ -49,14 +49,24 @@ export default function ReservationForm() {
     setSubmitStatus(null);
 
     try {
+      // Extract date and time separately
+      const reservationDate = new Date(selectedDate);
+      const dateOnly = reservationDate.toISOString().split('T')[0]; // YYYY-MM-DD
+      const timeOnly = reservationDate.toTimeString().substring(0, 5); // HH:MM
+
       const response = await fetch('/api/reservations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...data,
-          date: selectedDate.toISOString(),
+          name: data.name,
+          email: data.email,
+          phoneNumber: data.phone,
+          date: dateOnly,
+          time: timeOnly,
+          numberOfGuests: data.guests,
+          specialRequests: data.specialRequests,
         }),
       });
 
