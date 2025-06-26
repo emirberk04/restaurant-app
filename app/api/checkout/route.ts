@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -11,10 +11,10 @@ if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma;
 }
 
-type MenuItem = {
+interface MenuItem {
   id: number;
-  price: Prisma.Decimal;
-};
+  price: number;
+}
 
 export async function POST(request: Request) {
   try {
@@ -34,10 +34,16 @@ export async function POST(request: Request) {
       },
     });
 
+    // Convert to MenuItem type with number price
+    const convertedMenuItems: MenuItem[] = menuItems.map(item => ({
+      id: item.id,
+      price: Number(item.price)
+    }));
+
     // Calculate total amount
-    const totalAmount = menuItems.reduce((total: number, menuItem: MenuItem) => {
+    const totalAmount = convertedMenuItems.reduce((total: number, menuItem: MenuItem) => {
       const orderItem = items.find((item: { id: number }) => item.id === menuItem.id);
-      return total + (Number(menuItem.price) * (orderItem?.quantity || 1));
+      return total + (menuItem.price * (orderItem?.quantity || 1));
     }, 0);
 
     // Create order
@@ -47,11 +53,11 @@ export async function POST(request: Request) {
         totalAmount: totalAmount.toFixed(2),
         orderItems: {
           create: items.map((item: { id: number; quantity: number }) => {
-            const menuItem = menuItems.find((mi: MenuItem) => mi.id === item.id);
+            const menuItem = convertedMenuItems.find((mi: MenuItem) => mi.id === item.id);
             return {
               menuItemId: item.id,
               quantity: item.quantity,
-              unitPrice: menuItem?.price.toString() || '0',
+              unitPrice: menuItem ? menuItem.price.toString() : '0',
             };
           }),
         },
