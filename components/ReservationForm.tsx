@@ -10,10 +10,10 @@ import { enUS } from 'date-fns/locale';
 
 // Form validation schema
 const schema = yup.object().shape({
-  name: yup.string().required('Name is required'),
-  email: yup.string().email('Please enter a valid email address').required('Email is required'),
-  phone: yup.string().required('Phone number is required'),
-  guests: yup.number().min(1, 'Please select at least 1 guest').max(10, 'Maximum 10 guests allowed').required('Number of guests is required'),
+  name: yup.string().required('Ad Soyad zorunludur'),
+  email: yup.string().email('Geçerli bir e-posta adresi girin').required('E-posta zorunludur'),
+  phone: yup.string().required('Telefon numarası zorunludur'),
+  guests: yup.number().min(1, 'En az 1 kişi seçmelisiniz').max(10, 'Maksimum 10 kişi kabul edilir').required('Kişi sayısı zorunludur'),
   specialRequests: yup.string().default(''),
 });
 
@@ -127,41 +127,44 @@ export default function ReservationForm() {
 
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg">
-      <h2 className="text-3xl font-bold text-center mb-8">Reservation</h2>
+      <h2 className="text-3xl font-bold text-center mb-8">Rezervasyon</h2>
       
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div>
-          <label className="block text-gray-700 mb-2">Full Name</label>
+          <label className="block text-gray-700 mb-2">Ad Soyad</label>
           <input
             type="text"
             {...register('name')}
             className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Adınızı ve soyadınızı girin"
           />
           {errors.name && <p className="text-red-500 mt-1">{errors.name.message}</p>}
         </div>
 
         <div>
-          <label className="block text-gray-700 mb-2">Email</label>
+          <label className="block text-gray-700 mb-2">E-posta</label>
           <input
             type="email"
             {...register('email')}
             className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="E-posta adresinizi girin"
           />
           {errors.email && <p className="text-red-500 mt-1">{errors.email.message}</p>}
         </div>
 
         <div>
-          <label className="block text-gray-700 mb-2">Phone</label>
+          <label className="block text-gray-700 mb-2">Telefon</label>
           <input
             type="tel"
             {...register('phone')}
             className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Telefon numaranızı girin"
           />
           {errors.phone && <p className="text-red-500 mt-1">{errors.phone.message}</p>}
         </div>
 
         <div>
-          <label className="block text-gray-700 mb-2">Date and Time</label>
+          <label className="block text-gray-700 mb-2">Tarih ve Saat</label>
           <DatePicker
             selected={selectedDate}
             onChange={(date: Date | null) => setSelectedDate(date)}
@@ -173,21 +176,21 @@ export default function ReservationForm() {
             maxDate={maxDate}
             locale={enUS}
             className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholderText="Select date and time"
+            placeholderText="Tarih ve saat seçin"
           />
-          {!selectedDate && <p className="text-red-500 mt-1">Date and time selection is required</p>}
+          {!selectedDate && <p className="text-red-500 mt-1">Tarih ve saat seçimi zorunludur</p>}
         </div>
 
         <div>
-          <label className="block text-gray-700 mb-2">Number of Guests</label>
+          <label className="block text-gray-700 mb-2">Kişi Sayısı</label>
           <select
             {...register('guests')}
             className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="">Select number of guests</option>
+            <option value="">Kişi sayısını seçin</option>
             {[...Array(10)].map((_, i) => (
               <option key={i + 1} value={i + 1}>
-                {i + 1} {i + 1 === 1 ? 'Guest' : 'Guests'}
+                {i + 1} {i + 1 === 1 ? 'Kişi' : 'Kişi'}
               </option>
             ))}
           </select>
@@ -195,12 +198,12 @@ export default function ReservationForm() {
         </div>
 
         <div>
-          <label className="block text-gray-700 mb-2">Special Requests</label>
+          <label className="block text-gray-700 mb-2">Özel İstekler</label>
           <textarea
             {...register('specialRequests')}
             className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows={4}
-            placeholder="Please specify any special requests"
+            placeholder="Özel isteklerinizi belirtin (isteğe bağlı)"
           />
         </div>
 
@@ -212,19 +215,35 @@ export default function ReservationForm() {
               ? 'bg-gray-400 cursor-not-allowed'
               : 'bg-blue-600 hover:bg-blue-700'}`}
         >
-          {isSubmitting ? 'Submitting...' : 'Make Reservation'}
+          {isSubmitting ? 'Rezervasyon Oluşturuluyor...' : 'Rezervasyon Yap'}
         </button>
       </form>
 
       {submitStatus === 'success' && (
-        <div className="mt-4 p-4 bg-green-100 text-green-700 rounded-md">
-          Your reservation has been successfully created. A confirmation email has been sent.
+        <div className="mt-4 p-4 bg-green-100 border border-green-300 text-green-800 rounded-lg">
+          <div className="flex items-center">
+            <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+            </svg>
+            <div>
+              <h3 className="font-semibold">Rezervasyon Başarılı!</h3>
+              <p className="text-sm mt-1">Rezervasyonunuz başarıyla oluşturuldu. Onay e-postası gönderildi.</p>
+            </div>
+          </div>
         </div>
       )}
 
       {submitStatus === 'error' && (
-        <div className="mt-4 p-4 bg-red-100 text-red-700 rounded-md">
-          An error occurred while creating your reservation. Please try again.
+        <div className="mt-4 p-4 bg-red-100 border border-red-300 text-red-800 rounded-lg">
+          <div className="flex items-center">
+            <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
+            </svg>
+            <div>
+              <h3 className="font-semibold">Rezervasyon Hatası</h3>
+              <p className="text-sm mt-1">Rezervasyon oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.</p>
+            </div>
+          </div>
         </div>
       )}
     </div>
