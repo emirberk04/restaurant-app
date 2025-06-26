@@ -54,7 +54,8 @@ export default function ReservationForm() {
       const dateOnly = reservationDate.toISOString().split('T')[0]; // YYYY-MM-DD
       const timeOnly = reservationDate.toTimeString().substring(0, 5); // HH:MM
 
-      const response = await fetch('/api/reservations', {
+      // Create reservation
+      const reservationResponse = await fetch('/api/reservations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -70,11 +71,46 @@ export default function ReservationForm() {
         }),
       });
 
-      if (!response.ok) throw new Error('Could not create reservation');
+      if (!reservationResponse.ok) {
+        throw new Error('Rezervasyon oluşturulamadı');
+      }
 
+      const reservationResult = await reservationResponse.json();
+      console.log('Reservation created:', reservationResult);
+
+      // Send emails using the new endpoint
+      const emailResponse = await fetch('/api/send-reservation-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          reservation: {
+            id: reservationResult.reservation.id,
+            name: reservationResult.reservation.name,
+            email: reservationResult.reservation.email,
+            phoneNumber: reservationResult.reservation.phoneNumber,
+            date: reservationResult.reservation.date,
+            time: reservationResult.reservation.time,
+            numberOfGuests: reservationResult.reservation.numberOfGuests,
+            specialRequests: reservationResult.reservation.specialRequests,
+          }
+        }),
+      });
+
+      const emailResult = await emailResponse.json();
+      console.log('Email result:', emailResult);
+
+      // Show success message regardless of email status
       setSubmitStatus('success');
       reset();
       setSelectedDate(null);
+
+      // Optional: Show warning if emails failed
+      if (!emailResult.success) {
+        console.warn('Email sending failed:', emailResult.message);
+      }
+
     } catch (error) {
       setSubmitStatus('error');
       console.error('Reservation error:', error);

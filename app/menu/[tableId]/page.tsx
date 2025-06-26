@@ -21,7 +21,7 @@ interface Category {
 
 export default function MenuPage() {
   const params = useParams();
-  const tableId = params.tableId as string;
+  const tableId = params?.tableId as string;
   
   const [categories, setCategories] = useState<Category[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);

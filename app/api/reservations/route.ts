@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { sendReservationEmails } from '@/utils/email';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -39,29 +38,12 @@ export async function POST(request: Request) {
       },
     });
 
-    // Send emails (both customer confirmation and restaurant notification)
-    const emailResults = await sendReservationEmails({
-      id: reservation.id,
-      name: reservation.name,
-      email: reservation.email,
-      phoneNumber: reservation.phoneNumber,
-      date: reservation.date,
-      time: reservation.time,
-      numberOfGuests: reservation.numberOfGuests,
-      specialRequests: reservation.specialRequests || undefined,
-    });
+    console.log('Reservation created successfully:', reservation.id);
 
-    // Log email results
-    console.log('Email results:', emailResults);
-
-    // Return success response with email status
+    // Return success response
     return NextResponse.json({
       message: 'Rezervasyon başarıyla oluşturuldu',
       reservation,
-      emailStatus: {
-        customerEmail: emailResults.customer.success,
-        restaurantEmail: emailResults.restaurant.success,
-      }
     });
   } catch (error) {
     console.error('Rezervasyon hatası:', error);
