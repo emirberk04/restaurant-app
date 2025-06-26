@@ -3,6 +3,15 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 async function main() {
+  // Check if data already exists
+  const existingCategories = await prisma.menuCategory.findMany();
+  if (existingCategories.length > 0) {
+    console.log('✅ Database already seeded, skipping...');
+    return;
+  }
+
+  console.log('🌱 Seeding database...');
+
   // Create categories
   const categories = await Promise.all([
     prisma.menuCategory.create({
@@ -155,7 +164,7 @@ async function main() {
 
 main()
   .catch((e) => {
-    console.error(e);
+    console.error('❌ Error seeding database:', e);
     process.exit(1);
   })
   .finally(async () => {
