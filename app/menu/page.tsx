@@ -30,23 +30,23 @@ interface Category {
 
 const getItemImage = (categoryId: number, itemName: string) => {
   const imageMap: { [key: string]: string } = {
-    // Burgerler (categoryId: 1)
-    'Klasik Burger': 'https://images.pexels.com/photos/1639557/pexels-photo-1639557.jpeg',
+    // Burgers (categoryId: 1)
+    'Classic Burger': 'https://images.pexels.com/photos/1639557/pexels-photo-1639557.jpeg',
     'Cheeseburger': 'https://images.pexels.com/photos/1633578/pexels-photo-1633578.jpeg',
     'BBQ Burger': 'https://images.pexels.com/photos/2271107/pexels-photo-2271107.jpeg',
     
-    // Pizzalar (categoryId: 2)
-    'Margarita Pizza': 'https://images.pexels.com/photos/825661/pexels-photo-825661.jpeg',
+    // Pizzas (categoryId: 2)
+    'Margherita Pizza': 'https://images.pexels.com/photos/825661/pexels-photo-825661.jpeg',
     'Pepperoni Pizza': 'https://images.pexels.com/photos/4109111/pexels-photo-4109111.jpeg',
-    'Karışık Pizza': 'https://images.pexels.com/photos/2147491/pexels-photo-2147491.jpeg',
+    'Mixed Pizza': 'https://images.pexels.com/photos/2147491/pexels-photo-2147491.jpeg',
     
-    // İçecekler (categoryId: 3)
+    // Beverages (categoryId: 3)
     'Cola': 'https://images.pexels.com/photos/2983100/pexels-photo-2983100.jpeg',
     'Ayran': 'https://images.pexels.com/photos/4051402/pexels-photo-4051402.jpeg',
-    'Limonata': 'https://images.pexels.com/photos/2109099/pexels-photo-2109099.jpeg',
+    'Lemonade': 'https://images.pexels.com/photos/2109099/pexels-photo-2109099.jpeg',
     
-    // Tatlılar (categoryId: 4)
-    'Çikolatalı Sufle': 'https://images.pexels.com/photos/3026804/pexels-photo-3026804.jpeg',
+    // Desserts (categoryId: 4)
+    'Chocolate Souffle': 'https://images.pexels.com/photos/3026804/pexels-photo-3026804.jpeg',
     'Tiramisu': 'https://images.pexels.com/photos/6163263/pexels-photo-6163263.jpeg',
     'Cheesecake': 'https://images.pexels.com/photos/1126359/pexels-photo-1126359.jpeg',
   };
@@ -77,7 +77,7 @@ export default function MenuPage() {
           setSelectedCategory(dataWithImages[0].id)
         }
       } catch (error) {
-        console.error('Menü yükleme hatası:', error)
+        console.error('Error loading menu:', error)
       } finally {
         setIsLoading(false)
       }
@@ -100,7 +100,7 @@ export default function MenuPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 pb-24">
-      <h1 className="text-4xl font-bold text-center mb-8">Menümüz</h1>
+      <h1 className="text-4xl font-bold text-center mb-8">Our Menu</h1>
       
       <div className="flex overflow-x-auto gap-4 mb-8 pb-2 -mx-4 px-4">
         {categories.map((category) => (

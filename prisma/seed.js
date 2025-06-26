@@ -3,183 +3,149 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 async function main() {
-  // Kategorileri oluştur
+  // Create categories
   const categories = await Promise.all([
-    prisma.category.create({
+    prisma.menuCategory.create({
       data: {
-        name: 'Burgerler',
-        description: 'Lezzetli burgerlerimiz',
+        name: 'Burgers',
+        description: 'Delicious burgers',
       },
     }),
-    prisma.category.create({
+    prisma.menuCategory.create({
       data: {
-        name: 'Pizzalar',
-        description: 'Enfes pizzalarımız',
+        name: 'Pizzas',
+        description: 'Exquisite pizzas',
       },
     }),
-    prisma.category.create({
+    prisma.menuCategory.create({
       data: {
-        name: 'İçecekler',
-        description: 'Serinletici içecekler',
+        name: 'Beverages',
+        description: 'Refreshing drinks',
       },
     }),
-    prisma.category.create({
+    prisma.menuCategory.create({
       data: {
-        name: 'Tatlılar',
-        description: 'Tatlı alternatiflerimiz',
+        name: 'Desserts',
+        description: 'Sweet alternatives',
       },
     }),
   ]);
 
-  // Menü öğelerini oluştur
+  // Create menu items
   await Promise.all([
-    // Burgerler
+    // Burgers
     prisma.menuItem.create({
       data: {
-        name: 'Klasik Burger',
-        description: 'Dana eti, cheddar peyniri, marul, domates, turşu ve özel sosumuz',
+        name: 'Classic Burger',
+        description: 'Beef patty, cheddar cheese, lettuce, tomato, pickles and our special sauce',
         price: 150.00,
-        image: '/images/classic-burger.jpg',
+        image: 'https://images.pexels.com/photos/1639557/pexels-photo-1639557.jpeg',
         categoryId: categories[0].id,
       },
     }),
     prisma.menuItem.create({
       data: {
         name: 'Cheeseburger',
-        description: 'Dana eti, çift cheddar peyniri, karamelize soğan',
+        description: 'Beef patty, double cheddar cheese, caramelized onions',
         price: 160.00,
-        image: '/images/cheeseburger.jpg',
+        image: 'https://images.pexels.com/photos/1633578/pexels-photo-1633578.jpeg',
         categoryId: categories[0].id,
       },
     }),
     prisma.menuItem.create({
       data: {
         name: 'BBQ Burger',
-        description: 'Dana eti, barbekü sos, cheddar peyniri, kıtır soğan',
+        description: 'Beef patty, BBQ sauce, cheddar cheese, crispy onions',
         price: 170.00,
-        image: '/images/bbq-burger.jpg',
+        image: 'https://images.pexels.com/photos/2271107/pexels-photo-2271107.jpeg',
         categoryId: categories[0].id,
       },
     }),
 
-    // Pizzalar
+    // Pizzas
     prisma.menuItem.create({
       data: {
-        name: 'Margarita Pizza',
-        description: 'Domates sos, mozarella peyniri, fesleğen',
+        name: 'Margherita Pizza',
+        description: 'Tomato sauce, mozzarella cheese, fresh basil',
         price: 140.00,
-        image: '/images/margherita.jpg',
+        image: 'https://images.pexels.com/photos/825661/pexels-photo-825661.jpeg',
         categoryId: categories[1].id,
       },
     }),
     prisma.menuItem.create({
       data: {
         name: 'Pepperoni Pizza',
-        description: 'Domates sos, mozarella peyniri, pepperoni',
+        description: 'Tomato sauce, mozzarella cheese, pepperoni',
         price: 160.00,
-        image: '/images/pepperoni.jpg',
+        image: 'https://images.pexels.com/photos/4109111/pexels-photo-4109111.jpeg',
         categoryId: categories[1].id,
       },
     }),
     prisma.menuItem.create({
       data: {
-        name: 'Karışık Pizza',
-        description: 'Domates sos, mozarella peyniri, sosis, mantar, biber',
+        name: 'Mixed Pizza',
+        description: 'Tomato sauce, mozzarella cheese, sausage, mushrooms, peppers',
         price: 180.00,
-        image: '/images/mixed-pizza.jpg',
+        image: 'https://images.pexels.com/photos/2147491/pexels-photo-2147491.jpeg',
         categoryId: categories[1].id,
       },
     }),
 
-    // İçecekler
+    // Beverages
     prisma.menuItem.create({
       data: {
         name: 'Cola',
-        description: 'Soğuk cola',
+        description: 'Chilled cola',
         price: 30.00,
-        image: '/images/cola.jpg',
+        image: 'https://images.pexels.com/photos/2983100/pexels-photo-2983100.jpeg',
         categoryId: categories[2].id,
       },
     }),
     prisma.menuItem.create({
       data: {
         name: 'Ayran',
-        description: 'Taze ayran',
+        description: 'Fresh ayran (Turkish yogurt drink)',
         price: 20.00,
-        image: '/images/ayran.jpg',
+        image: 'https://images.pexels.com/photos/4051402/pexels-photo-4051402.jpeg',
         categoryId: categories[2].id,
       },
     }),
     prisma.menuItem.create({
       data: {
-        name: 'Limonata',
-        description: 'Ev yapımı limonata',
+        name: 'Lemonade',
+        description: 'Homemade lemonade',
         price: 35.00,
-        image: '/images/lemonade.jpg',
+        image: 'https://images.pexels.com/photos/2109099/pexels-photo-2109099.jpeg',
         categoryId: categories[2].id,
       },
     }),
 
-    // Tatlılar
+    // Desserts
     prisma.menuItem.create({
       data: {
-        name: 'Çikolatalı Sufle',
-        description: 'Sıcak çikolatalı sufle',
+        name: 'Chocolate Souffle',
+        description: 'Hot chocolate souffle',
         price: 80.00,
-        image: '/images/chocolate-souffle.jpg',
+        image: 'https://images.pexels.com/photos/3026804/pexels-photo-3026804.jpeg',
         categoryId: categories[3].id,
       },
     }),
     prisma.menuItem.create({
       data: {
         name: 'Tiramisu',
-        description: 'İtalyan usulü tiramisu',
+        description: 'Italian style tiramisu',
         price: 70.00,
-        image: '/images/tiramisu.jpg',
+        image: 'https://images.pexels.com/photos/6163263/pexels-photo-6163263.jpeg',
         categoryId: categories[3].id,
       },
     }),
     prisma.menuItem.create({
       data: {
         name: 'Cheesecake',
-        description: 'New York cheesecake',
+        description: 'New York style cheesecake',
         price: 75.00,
-        image: '/images/cheesecake.jpg',
+        image: 'https://images.pexels.com/photos/1126359/pexels-photo-1126359.jpeg',
         categoryId: categories[3].id,
-      },
-    }),
-  ]);
-
-  // Örnek masaları oluştur
-  await Promise.all([
-    prisma.table.create({
-      data: {
-        id: 'T1',
-        number: 1,
-      },
-    }),
-    prisma.table.create({
-      data: {
-        id: 'T2',
-        number: 2,
-      },
-    }),
-    prisma.table.create({
-      data: {
-        id: 'T3',
-        number: 3,
-      },
-    }),
-    prisma.table.create({
-      data: {
-        id: 'T4',
-        number: 4,
-      },
-    }),
-    prisma.table.create({
-      data: {
-        id: 'T5',
-        number: 5,
       },
     }),
   ]);

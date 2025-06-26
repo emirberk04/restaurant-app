@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -11,12 +11,9 @@ if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma;
 }
 
-type MenuItemWithPrice = {
+type MenuItem = {
   id: number;
-  price: {
-    toString(): string;
-    toNumber(): number;
-  };
+  price: Prisma.Decimal;
 };
 
 export async function POST(request: Request) {
@@ -24,34 +21,37 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { items } = body;
 
-    // Ürünleri veritabanından al
+    // Get products from database
     const menuItems = await prisma.menuItem.findMany({
       where: {
         id: {
           in: items.map((item: { id: number }) => item.id),
         },
       },
+      select: {
+        id: true,
+        price: true,
+      },
     });
 
-    // Toplam tutarı hesapla
-    const totalAmount = menuItems.reduce((total: number, menuItem: MenuItemWithPrice) => {
+    // Calculate total amount
+    const totalAmount = menuItems.reduce((total: number, menuItem: MenuItem) => {
       const orderItem = items.find((item: { id: number }) => item.id === menuItem.id);
-      return total + (menuItem.price.toNumber() * (orderItem?.quantity || 1));
+      return total + (Number(menuItem.price) * (orderItem?.quantity || 1));
     }, 0);
 
-    // Sipariş oluştur
+    // Create order
     const order = await prisma.order.create({
       data: {
         status: 'PENDING',
         totalAmount: totalAmount.toFixed(2),
         orderItems: {
           create: items.map((item: { id: number; quantity: number }) => {
-            const menuItem = menuItems.find((mi: MenuItemWithPrice) => mi.id === item.id);
-            const price = menuItem?.price || 0;
+            const menuItem = menuItems.find((mi: MenuItem) => mi.id === item.id);
             return {
               menuItemId: item.id,
               quantity: item.quantity,
-              unitPrice: typeof price === 'number' ? price.toString() : price.toString(),
+              unitPrice: menuItem?.price.toString() || '0',
             };
           }),
         },
@@ -66,13 +66,13 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ 
-      message: 'Sipariş başarıyla oluşturuldu',
+      message: 'Order created successfully',
       order 
     });
   } catch (error) {
-    console.error('Checkout hatası:', error);
+    console.error('Checkout error:', error);
     return NextResponse.json(
-      { error: 'Sipariş oluşturulurken bir hata oluştu' },
+      { error: 'An error occurred while creating the order' },
       { status: 500 }
     );
   }

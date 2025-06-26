@@ -6,14 +6,14 @@ import { useForm, SubmitHandler } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import "react-datepicker/dist/react-datepicker.css";
-import { tr } from 'date-fns/locale';
+import { enUS } from 'date-fns/locale';
 
 // Form validation schema
 const schema = yup.object().shape({
-  name: yup.string().required('İsim alanı zorunludur'),
-  email: yup.string().email('Geçerli bir email adresi giriniz').required('Email alanı zorunludur'),
-  phone: yup.string().required('Telefon alanı zorunludur'),
-  guests: yup.number().min(1, 'En az 1 kişi seçmelisiniz').max(10, 'En fazla 10 kişi seçebilirsiniz').required('Kişi sayısı zorunludur'),
+  name: yup.string().required('Name is required'),
+  email: yup.string().email('Please enter a valid email address').required('Email is required'),
+  phone: yup.string().required('Phone number is required'),
+  guests: yup.number().min(1, 'Please select at least 1 guest').max(10, 'Maximum 10 guests allowed').required('Number of guests is required'),
   specialRequests: yup.string().default(''),
 });
 
@@ -60,14 +60,14 @@ export default function ReservationForm() {
         }),
       });
 
-      if (!response.ok) throw new Error('Rezervasyon oluşturulamadı');
+      if (!response.ok) throw new Error('Could not create reservation');
 
       setSubmitStatus('success');
       reset();
       setSelectedDate(null);
     } catch (error) {
       setSubmitStatus('error');
-      console.error('Rezervasyon hatası:', error);
+      console.error('Reservation error:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -81,11 +81,11 @@ export default function ReservationForm() {
 
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg">
-      <h2 className="text-3xl font-bold text-center mb-8">Rezervasyon</h2>
+      <h2 className="text-3xl font-bold text-center mb-8">Reservation</h2>
       
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div>
-          <label className="block text-gray-700 mb-2">İsim Soyisim</label>
+          <label className="block text-gray-700 mb-2">Full Name</label>
           <input
             type="text"
             {...register('name')}
@@ -105,7 +105,7 @@ export default function ReservationForm() {
         </div>
 
         <div>
-          <label className="block text-gray-700 mb-2">Telefon</label>
+          <label className="block text-gray-700 mb-2">Phone</label>
           <input
             type="tel"
             {...register('phone')}
@@ -115,33 +115,33 @@ export default function ReservationForm() {
         </div>
 
         <div>
-          <label className="block text-gray-700 mb-2">Tarih ve Saat</label>
+          <label className="block text-gray-700 mb-2">Date and Time</label>
           <DatePicker
             selected={selectedDate}
             onChange={(date: Date | null) => setSelectedDate(date)}
             showTimeSelect
             timeFormat="HH:mm"
             timeIntervals={30}
-            dateFormat="dd/MM/yyyy HH:mm"
+            dateFormat="MM/dd/yyyy HH:mm"
             minDate={minDate}
             maxDate={maxDate}
-            locale={tr}
+            locale={enUS}
             className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholderText="Tarih ve saat seçiniz"
+            placeholderText="Select date and time"
           />
-          {!selectedDate && <p className="text-red-500 mt-1">Tarih ve saat seçimi zorunludur</p>}
+          {!selectedDate && <p className="text-red-500 mt-1">Date and time selection is required</p>}
         </div>
 
         <div>
-          <label className="block text-gray-700 mb-2">Kişi Sayısı</label>
+          <label className="block text-gray-700 mb-2">Number of Guests</label>
           <select
             {...register('guests')}
             className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="">Kişi sayısı seçiniz</option>
+            <option value="">Select number of guests</option>
             {[...Array(10)].map((_, i) => (
               <option key={i + 1} value={i + 1}>
-                {i + 1} Kişi
+                {i + 1} {i + 1 === 1 ? 'Guest' : 'Guests'}
               </option>
             ))}
           </select>
@@ -149,12 +149,12 @@ export default function ReservationForm() {
         </div>
 
         <div>
-          <label className="block text-gray-700 mb-2">Özel İstekler</label>
+          <label className="block text-gray-700 mb-2">Special Requests</label>
           <textarea
             {...register('specialRequests')}
             className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows={4}
-            placeholder="Varsa özel isteklerinizi belirtiniz"
+            placeholder="Please specify any special requests"
           />
         </div>
 
@@ -166,19 +166,19 @@ export default function ReservationForm() {
               ? 'bg-gray-400 cursor-not-allowed'
               : 'bg-blue-600 hover:bg-blue-700'}`}
         >
-          {isSubmitting ? 'Gönderiliyor...' : 'Rezervasyon Yap'}
+          {isSubmitting ? 'Submitting...' : 'Make Reservation'}
         </button>
       </form>
 
       {submitStatus === 'success' && (
         <div className="mt-4 p-4 bg-green-100 text-green-700 rounded-md">
-          Rezervasyonunuz başarıyla oluşturuldu. Onay emaili gönderildi.
+          Your reservation has been successfully created. A confirmation email has been sent.
         </div>
       )}
 
       {submitStatus === 'error' && (
         <div className="mt-4 p-4 bg-red-100 text-red-700 rounded-md">
-          Rezervasyon oluşturulurken bir hata oluştu. Lütfen tekrar deneyiniz.
+          An error occurred while creating your reservation. Please try again.
         </div>
       )}
     </div>

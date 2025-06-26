@@ -18,7 +18,7 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   title: 'Elegance Restaurant',
-  description: 'Modern ve lezzetli yemekler sunan restoran',
+  description: 'A restaurant offering modern and delicious cuisine',
 }
 
 export default function RootLayout({
@@ -27,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="tr" className={`${inter.variable} ${playfair.variable}`}>
+    <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
       <body className="min-h-screen flex flex-col bg-gray-50">
         <Navbar />
         <main className="flex-1">{children}</main>

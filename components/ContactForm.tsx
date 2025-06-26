@@ -24,13 +24,13 @@ const ContactForm = () => {
   const onSubmit = async (data: ContactFormData) => {
     setIsSubmitting(true);
     try {
-      // TODO: API entegrasyonu yapılacak
+      // TODO: API integration will be implemented
       console.log('Form data:', data);
       setSubmitSuccess(true);
       reset();
       setTimeout(() => setSubmitSuccess(false), 5000);
     } catch (error) {
-      console.error('İletişim formu hatası:', error);
+      console.error('Contact form error:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -40,12 +40,12 @@ const ContactForm = () => {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div>
         <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-          Ad Soyad
+          Full Name
         </label>
         <input
           type="text"
           id="name"
-          {...register('name', { required: 'Ad Soyad gereklidir' })}
+          {...register('name', { required: 'Full name is required' })}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
         />
         {errors.name && (
@@ -55,16 +55,16 @@ const ContactForm = () => {
 
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-          E-posta
+          Email
         </label>
         <input
           type="email"
           id="email"
           {...register('email', {
-            required: 'E-posta gereklidir',
+            required: 'Email is required',
             pattern: {
               value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-              message: 'Geçersiz e-posta adresi',
+              message: 'Invalid email address',
             },
           })}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
@@ -76,12 +76,12 @@ const ContactForm = () => {
 
       <div>
         <label htmlFor="subject" className="block text-sm font-medium text-gray-700">
-          Konu
+          Subject
         </label>
         <input
           type="text"
           id="subject"
-          {...register('subject', { required: 'Konu gereklidir' })}
+          {...register('subject', { required: 'Subject is required' })}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
         />
         {errors.subject && (
@@ -91,12 +91,12 @@ const ContactForm = () => {
 
       <div>
         <label htmlFor="message" className="block text-sm font-medium text-gray-700">
-          Mesaj
+          Message
         </label>
         <textarea
           id="message"
           rows={4}
-          {...register('message', { required: 'Mesaj gereklidir' })}
+          {...register('message', { required: 'Message is required' })}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
         />
         {errors.message && (
@@ -106,7 +106,7 @@ const ContactForm = () => {
 
       {submitSuccess && (
         <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
-          Mesajınız başarıyla gönderildi. En kısa sürede size dönüş yapacağız.
+          Your message has been sent successfully. We will get back to you as soon as possible.
         </div>
       )}
 
@@ -115,7 +115,7 @@ const ContactForm = () => {
         disabled={isSubmitting}
         className="w-full bg-primary text-white py-3 px-6 rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50"
       >
-        {isSubmitting ? 'Gönderiliyor...' : 'Mesaj Gönder'}
+        {isSubmitting ? 'Sending...' : 'Send Message'}
       </button>
     </form>
   );

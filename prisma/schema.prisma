@@ -1,134 +1,45 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["jsonProtocol"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
-// Kullanıcı modeli
-model User {
-  id            String        @id @default(cuid())
-  email         String        @unique
-  name          String
-  password      String
-  role          UserRole      @default(CUSTOMER)
-  phone         String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  orders        Order[]
-  reservations  Reservation[]
-}
-
-enum UserRole {
-  ADMIN
-  STAFF
-  CUSTOMER
-}
-
-// Menü kategorisi modeli
 model MenuCategory {
-  id          Int         @id @default(autoincrement())
+  id          Int        @id @default(autoincrement())
   name        String
   description String?
-  image       String?
+  menuItems   MenuItem[]
+}
+
+model MenuItem {
+  id          Int          @id @default(autoincrement())
+  name        String
+  description String
+  price       Float
+  image       String
+  category    MenuCategory @relation(fields: [categoryId], references: [id])
+  categoryId  Int
+  orderItems  OrderItem[]
+}
+
+model Order {
+  id          Int         @id @default(autoincrement())
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
-  menuItems   MenuItem[]
-
-  @@map("menu_categories")
+  status      String
+  totalAmount String
+  orderItems  OrderItem[]
 }
 
-// Menü öğesi modeli
-model MenuItem {
-  id           Int          @id @default(autoincrement())
-  name         String
-  description  String
-  price        Decimal      @db.Decimal(10, 2)
-  image        String
-  isAvailable  Boolean      @default(true)
-  categoryId   Int
-  category     MenuCategory @relation(fields: [categoryId], references: [id])
-  orderItems   OrderItem[]
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-
-  @@index([categoryId])
-  @@map("menu_items")
-}
-
-// Sipariş modeli
-model Order {
-  id           String      @id @default(cuid())
-  userId       String?
-  user         User?       @relation(fields: [userId], references: [id])
-  status       OrderStatus @default(PENDING)
-  totalAmount  Decimal     @db.Decimal(10, 2)
-  orderItems   OrderItem[]
-  customerNote String?
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-
-  @@index([userId])
-  @@map("orders")
-}
-
-// Sipariş öğesi modeli
 model OrderItem {
-  id          Int       @id @default(autoincrement())
-  orderId     String
-  order       Order     @relation(fields: [orderId], references: [id])
-  menuItemId  Int
-  menuItem    MenuItem  @relation(fields: [menuItemId], references: [id])
-  quantity    Int
-  unitPrice   Decimal   @db.Decimal(10, 2)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  @@index([orderId])
-  @@index([menuItemId])
-  @@map("order_items")
-}
-
-// Rezervasyon modeli
-model Reservation {
-  id              String    @id @default(cuid())
-  userId          String?
-  user            User?     @relation(fields: [userId], references: [id])
-  name            String
-  email           String
-  phoneNumber     String
-  date            DateTime
-  time            String
-  numberOfGuests  Int
-  status          ReservationStatus @default(PENDING)
-  specialRequests String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  @@index([userId])
-  @@map("reservations")
-}
-
-enum OrderStatus {
-  PENDING
-  CONFIRMED
-  PREPARING
-  READY
-  DELIVERED
-  CANCELLED
-}
-
-enum ReservationStatus {
-  PENDING
-  CONFIRMED
-  CANCELLED
+  id         Int      @id @default(autoincrement())
+  order      Order    @relation(fields: [orderId], references: [id])
+  orderId    Int
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  menuItemId Int
+  quantity   Int
+  unitPrice  String
 }

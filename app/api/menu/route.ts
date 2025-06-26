@@ -22,11 +22,18 @@ export async function GET() {
       },
     });
 
+    if (!categories || categories.length === 0) {
+      return NextResponse.json(
+        { error: 'No menu items found' },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json(categories);
   } catch (error) {
-    console.error('Menü yükleme hatası:', error);
+    console.error('Error loading menu:', error);
     return NextResponse.json(
-      { error: 'Menü yüklenirken bir hata oluştu' },
+      { error: 'An error occurred while loading the menu' },
       { status: 500 }
     );
   }
