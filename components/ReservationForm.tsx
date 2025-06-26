@@ -101,53 +101,15 @@ export default function ReservationForm() {
       const reservationResult = await reservationResponse.json();
       console.log('✅ Reservation API Success:', reservationResult);
       console.log('🗄️ Database Reservation Created:', reservationResult.reservation);
+      console.log('📧 Email notifications will be sent automatically by the backend');
 
-      const emailPayload = {
-        reservation: {
-          id: reservationResult.reservation.id,
-          name: reservationResult.reservation.name,
-          email: reservationResult.reservation.email,
-          phoneNumber: reservationResult.reservation.phoneNumber,
-          date: reservationResult.reservation.date,
-          time: reservationResult.reservation.time,
-          numberOfGuests: reservationResult.reservation.numberOfGuests,
-          specialRequests: reservationResult.reservation.specialRequests,
-        }
-      };
-
-      console.log('📧 Email Payload:', emailPayload);
-      console.log('🔗 Making API call to /api/send-reservation-email...');
-
-      // Send emails using the new endpoint
-      const emailResponse = await fetch('/api/send-reservation-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(emailPayload),
-      });
-
-      console.log('📧 Email API Response Status:', emailResponse.status);
-      console.log('📧 Email API Response OK:', emailResponse.ok);
-
-      const emailResult = await emailResponse.json();
-      console.log('📧 Email API Result:', emailResult);
-
-      // Show success message regardless of email status
+      // Show success message
       console.log('🎉 Setting success status...');
       setSubmitStatus('success');
       console.log('🔄 Resetting form...');
       reset();
       setSelectedDate(null);
       console.log('✅ REZERVASYON IŞLEMI TAMAMLANDI');
-
-      // Optional: Show warning if emails failed
-      if (!emailResult.success) {
-        console.warn('⚠️ Email sending failed:', emailResult.message);
-        console.warn('⚠️ Email failure details:', emailResult);
-      } else {
-        console.log('📧 Emails sent successfully!');
-      }
 
     } catch (error) {
       console.error('❌ REZERVASYON HATASI:');
