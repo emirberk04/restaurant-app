@@ -43,7 +43,14 @@ export default function ReservationForm() {
   });
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
-    if (!selectedDate) return;
+    console.log('🚀 REZERVASYON FORMU DEBUG - BAŞLANGIC');
+    console.log('📝 Form Data:', data);
+    console.log('📅 Selected Date:', selectedDate);
+    
+    if (!selectedDate) {
+      console.error('❌ Tarih seçilmemiş!');
+      return;
+    }
     
     setIsSubmitting(true);
     setSubmitStatus(null);
@@ -54,29 +61,62 @@ export default function ReservationForm() {
       const dateOnly = reservationDate.toISOString().split('T')[0]; // YYYY-MM-DD
       const timeOnly = reservationDate.toTimeString().substring(0, 5); // HH:MM
 
+      console.log('🕒 Date Processing:');
+      console.log('  - Original selectedDate:', selectedDate);
+      console.log('  - Reservation Date Object:', reservationDate);
+      console.log('  - Date Only (YYYY-MM-DD):', dateOnly);
+      console.log('  - Time Only (HH:MM):', timeOnly);
+
+      const requestPayload = {
+        name: data.name,
+        email: data.email,
+        phoneNumber: data.phone,
+        date: dateOnly,
+        time: timeOnly,
+        numberOfGuests: data.guests,
+        specialRequests: data.specialRequests,
+      };
+
+      console.log('📤 API Request Payload:', requestPayload);
+      console.log('🔗 Making API call to /api/reservations...');
+
       // Create reservation
       const reservationResponse = await fetch('/api/reservations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          name: data.name,
-          email: data.email,
-          phoneNumber: data.phone,
-          date: dateOnly,
-          time: timeOnly,
-          numberOfGuests: data.guests,
-          specialRequests: data.specialRequests,
-        }),
+        body: JSON.stringify(requestPayload),
       });
 
+      console.log('📡 API Response Status:', reservationResponse.status);
+      console.log('📡 API Response OK:', reservationResponse.ok);
+
       if (!reservationResponse.ok) {
-        throw new Error('Rezervasyon oluşturulamadı');
+        const errorText = await reservationResponse.text();
+        console.error('❌ API Error Response:', errorText);
+        throw new Error(`Rezervasyon oluşturulamadı: ${reservationResponse.status}`);
       }
 
       const reservationResult = await reservationResponse.json();
-      console.log('Reservation created:', reservationResult);
+      console.log('✅ Reservation API Success:', reservationResult);
+      console.log('🗄️ Database Reservation Created:', reservationResult.reservation);
+
+      const emailPayload = {
+        reservation: {
+          id: reservationResult.reservation.id,
+          name: reservationResult.reservation.name,
+          email: reservationResult.reservation.email,
+          phoneNumber: reservationResult.reservation.phoneNumber,
+          date: reservationResult.reservation.date,
+          time: reservationResult.reservation.time,
+          numberOfGuests: reservationResult.reservation.numberOfGuests,
+          specialRequests: reservationResult.reservation.specialRequests,
+        }
+      };
+
+      console.log('📧 Email Payload:', emailPayload);
+      console.log('🔗 Making API call to /api/send-reservation-email...');
 
       // Send emails using the new endpoint
       const emailResponse = await fetch('/api/send-reservation-email', {
@@ -84,38 +124,41 @@ export default function ReservationForm() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          reservation: {
-            id: reservationResult.reservation.id,
-            name: reservationResult.reservation.name,
-            email: reservationResult.reservation.email,
-            phoneNumber: reservationResult.reservation.phoneNumber,
-            date: reservationResult.reservation.date,
-            time: reservationResult.reservation.time,
-            numberOfGuests: reservationResult.reservation.numberOfGuests,
-            specialRequests: reservationResult.reservation.specialRequests,
-          }
-        }),
+        body: JSON.stringify(emailPayload),
       });
 
+      console.log('📧 Email API Response Status:', emailResponse.status);
+      console.log('📧 Email API Response OK:', emailResponse.ok);
+
       const emailResult = await emailResponse.json();
-      console.log('Email result:', emailResult);
+      console.log('📧 Email API Result:', emailResult);
 
       // Show success message regardless of email status
+      console.log('🎉 Setting success status...');
       setSubmitStatus('success');
+      console.log('🔄 Resetting form...');
       reset();
       setSelectedDate(null);
+      console.log('✅ REZERVASYON IŞLEMI TAMAMLANDI');
 
       // Optional: Show warning if emails failed
       if (!emailResult.success) {
-        console.warn('Email sending failed:', emailResult.message);
+        console.warn('⚠️ Email sending failed:', emailResult.message);
+        console.warn('⚠️ Email failure details:', emailResult);
+      } else {
+        console.log('📧 Emails sent successfully!');
       }
 
     } catch (error) {
+      console.error('❌ REZERVASYON HATASI:');
+      console.error('  - Error message:', error instanceof Error ? error.message : String(error));
+      console.error('  - Error object:', error);
+      console.error('  - Error stack:', error instanceof Error ? error.stack : 'No stack trace');
       setSubmitStatus('error');
-      console.error('Reservation error:', error);
     } finally {
+      console.log('🔄 Setting isSubmitting to false...');
       setIsSubmitting(false);
+      console.log('🏁 REZERVASYON FORMU DEBUG - BİTİŞ');
     }
   };
 

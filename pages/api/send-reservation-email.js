@@ -514,8 +514,13 @@ const getRestaurantEmailTemplate = (reservation) => `
 `;
 
 export default async function handler(req, res) {
+  console.log('📧 EMAIL API DEBUG - BAŞLANGIC');
+  console.log('📋 Request Method:', req.method);
+  console.log('📋 Request Body:', req.body);
+  
   // Only allow POST requests
   if (req.method !== 'POST') {
+    console.error('❌ Invalid request method:', req.method);
     return res.status(405).json({ 
       error: 'Method not allowed',
       message: 'Bu endpoint sadece POST isteklerini kabul eder' 
@@ -524,8 +529,11 @@ export default async function handler(req, res) {
 
   try {
     // Check if Resend API key is configured
+    console.log('🔑 Checking Resend API key...');
+    console.log('🔑 RESEND_API_KEY exists:', !!process.env.RESEND_API_KEY);
+    
     if (!process.env.RESEND_API_KEY) {
-      console.error('RESEND_API_KEY environment variable is not set');
+      console.error('❌ RESEND_API_KEY environment variable is not set');
       return res.status(500).json({ 
         error: 'Email service not configured',
         message: 'Email servisi yapılandırılmamış' 
@@ -534,9 +542,11 @@ export default async function handler(req, res) {
 
     // Get reservation data from request body
     const { reservation } = req.body;
+    console.log('📝 Extracted reservation data:', reservation);
 
     // Validate required fields
     if (!reservation) {
+      console.error('❌ No reservation data provided');
       return res.status(400).json({ 
         error: 'Missing reservation data',
         message: 'Rezervasyon bilgileri eksik' 
@@ -544,9 +554,13 @@ export default async function handler(req, res) {
     }
 
     const requiredFields = ['id', 'name', 'email', 'phoneNumber', 'date', 'time', 'numberOfGuests'];
+    console.log('🔍 Checking required fields:', requiredFields);
+    
     const missingFields = requiredFields.filter(field => !reservation[field]);
+    console.log('🔍 Missing fields check result:', missingFields);
 
     if (missingFields.length > 0) {
+      console.error('❌ Missing required fields:', missingFields);
       return res.status(400).json({ 
         error: 'Missing required fields',
         message: `Eksik alanlar: ${missingFields.join(', ')}`,
@@ -559,29 +573,51 @@ export default async function handler(req, res) {
     const restaurantEmail = process.env.RESTAURANT_EMAIL || 'emirberkalan2@gmail.com';
     const fromEmail = process.env.EMAIL_FROM || 'Elegance Restaurant <noreply@elegancerestaurant.com>';
 
-    console.log('Sending emails to:', { customerEmail, restaurantEmail });
+    console.log('📧 Email Configuration:');
+    console.log('  - Customer Email:', customerEmail);
+    console.log('  - Restaurant Email:', restaurantEmail);
+    console.log('  - From Email:', fromEmail);
+    console.log('  - RESTAURANT_EMAIL env:', process.env.RESTAURANT_EMAIL);
+    console.log('  - EMAIL_FROM env:', process.env.EMAIL_FROM);
+
+    // Prepare email data
+    const customerEmailData = {
+      from: fromEmail,
+      to: [customerEmail],
+      subject: `✅ Rezervasyon Onayı - #${reservation.id} | Elegance Restaurant`,
+      html: getCustomerEmailTemplate(reservation),
+    };
+
+    const restaurantEmailData = {
+      from: fromEmail,
+      to: [restaurantEmail],
+      subject: `🔔 YENİ REZERVASYON - ${reservation.name} | ${new Date(reservation.date).toLocaleDateString('tr-TR')}`,
+      html: getRestaurantEmailTemplate(reservation),
+    };
+
+    console.log('📧 Email Data Prepared:');
+    console.log('  - Customer email subject:', customerEmailData.subject);
+    console.log('  - Restaurant email subject:', restaurantEmailData.subject);
+    console.log('  - Customer email to:', customerEmailData.to);
+    console.log('  - Restaurant email to:', restaurantEmailData.to);
 
     // Send emails in parallel
+    console.log('🚀 Starting email sending process...');
     const emailPromises = [
       // Customer confirmation email
-      resend.emails.send({
-        from: fromEmail,
-        to: [customerEmail],
-        subject: `✅ Rezervasyon Onayı - #${reservation.id} | Elegance Restaurant`,
-        html: getCustomerEmailTemplate(reservation),
-      }),
+      resend.emails.send(customerEmailData),
       
       // Restaurant notification email
-      resend.emails.send({
-        from: fromEmail,
-        to: [restaurantEmail],
-        subject: `🔔 YENİ REZERVASYON - ${reservation.name} | ${new Date(reservation.date).toLocaleDateString('tr-TR')}`,
-        html: getRestaurantEmailTemplate(reservation),
-      })
+      resend.emails.send(restaurantEmailData)
     ];
 
+    console.log('⏳ Waiting for emails to be sent...');
     // Wait for both emails to be sent
     const [customerResult, restaurantResult] = await Promise.allSettled(emailPromises);
+    
+    console.log('📧 Email sending completed');
+    console.log('  - Customer result status:', customerResult.status);
+    console.log('  - Restaurant result status:', restaurantResult.status);
 
     // Process results
     const results = {
@@ -597,29 +633,41 @@ export default async function handler(req, res) {
       }
     };
 
-    // Log results
-    console.log('Email results:', {
-      customerSuccess: results.customer.success,
-      restaurantSuccess: results.restaurant.success
-    });
+    // Log detailed results
+    console.log('📧 Detailed Email Results:');
+    console.log('  - Customer Email:');
+    console.log('    * Success:', results.customer.success);
+    console.log('    * Data:', results.customer.data);
+    console.log('    * Error:', results.customer.error);
+    console.log('  - Restaurant Email:');
+    console.log('    * Success:', results.restaurant.success);
+    console.log('    * Data:', results.restaurant.data);
+    console.log('    * Error:', results.restaurant.error);
 
     // Determine overall success
     const allSuccess = results.customer.success && results.restaurant.success;
     const partialSuccess = results.customer.success || results.restaurant.success;
 
+    console.log('📊 Email Success Summary:');
+    console.log('  - All Success:', allSuccess);
+    console.log('  - Partial Success:', partialSuccess);
+
     if (allSuccess) {
+      console.log('✅ All emails sent successfully');
       return res.status(200).json({
         success: true,
         message: 'Tüm emailler başarıyla gönderildi',
         results
       });
     } else if (partialSuccess) {
+      console.log('⚠️ Some emails failed to send');
       return res.status(207).json({
         success: false,
         message: 'Bazı emailler gönderilemedi',
         results
       });
     } else {
+      console.log('❌ All emails failed to send');
       return res.status(500).json({
         success: false,
         message: 'Hiçbir email gönderilemedi',
@@ -628,13 +676,19 @@ export default async function handler(req, res) {
     }
 
   } catch (error) {
-    console.error('Send reservation email error:', error);
+    console.error('❌ EMAIL API HATASI:');
+    console.error('  - Error message:', error.message);
+    console.error('  - Error object:', error);
+    console.error('  - Error stack:', error.stack);
+    console.log('🏁 EMAIL API DEBUG - HATA İLE BİTİŞ');
     
-    return res.status(500).json({
-      success: false,
-      error: 'Internal server error',
-      message: 'Email gönderilirken beklenmeyen bir hata oluştu',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
+          return res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+        message: 'Email gönderilirken beklenmeyen bir hata oluştu',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
   }
+  
+  console.log('🏁 EMAIL API DEBUG - NORMAL BİTİŞ');
 } 
