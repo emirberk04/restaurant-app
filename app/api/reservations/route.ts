@@ -83,20 +83,29 @@ export async function POST(request: Request) {
     console.log('📧 Attempting to send email notifications...');
     try {
       const emailData = {
-        id: reservation.id,
-        name: reservation.name,
-        email: reservation.email,
-        phoneNumber: reservation.phoneNumber,
-        date: reservation.date.toISOString().split('T')[0], // YYYY-MM-DD format
-        time: reservation.time,
-        numberOfGuests: reservation.numberOfGuests,
-        specialRequests: reservation.specialRequests,
-        status: reservation.status
+        reservation: {
+          id: reservation.id,
+          name: reservation.name,
+          email: reservation.email,
+          phoneNumber: reservation.phoneNumber,
+          date: reservation.date.toISOString().split('T')[0], // YYYY-MM-DD format
+          time: reservation.time,
+          numberOfGuests: reservation.numberOfGuests,
+          specialRequests: reservation.specialRequests,
+          status: reservation.status
+        }
       };
 
       console.log('📧 Email Data:', emailData);
 
-      const emailResponse = await fetch(`${request.url.split('/api')[0]}/api/send-reservation-email`, {
+      // Get the base URL
+      const url = new URL(request.url);
+      const baseUrl = `${url.protocol}//${url.host}`;
+      
+      console.log('🌐 Base URL:', baseUrl);
+      console.log('🔗 Email API URL:', `${baseUrl}/api/send-reservation-email`);
+
+      const emailResponse = await fetch(`${baseUrl}/api/send-reservation-email`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
