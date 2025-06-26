@@ -80,8 +80,8 @@ export default function ReservationForm() {
       console.log('📤 API Request Payload:', requestPayload);
       console.log('🔗 Making API call to /api/reservations...');
 
-      // Create reservation
-      const reservationResponse = await fetch('/api/reservations', {
+      // Create reservation (using test API for debugging)
+      const reservationResponse = await fetch('/api/test-reservation', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
