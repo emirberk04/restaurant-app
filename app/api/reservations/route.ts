@@ -88,7 +88,7 @@ export async function POST(request: Request) {
     }
 
     // Create reservation in database
-    let reservation;
+    let reservation: any;
     try {
       console.log('💾 Creating reservation record...');
       reservation = await prisma.reservation.create({
