@@ -11,55 +11,58 @@ if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma;
 }
 
-type MenuItemWithPrice = {
+interface MenuItem {
   id: number;
-  price: {
-    toString(): string;
-    toNumber(): number;
-  };
-};
+  price: number;
+}
+
+interface OrderItem {
+  id: number;
+  quantity: number;
+}
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { items, customerNote } = body;
+    const { items } = body;
 
-    if (!items || !Array.isArray(items) || items.length === 0) {
-      return NextResponse.json(
-        { error: 'Geçersiz sipariş verileri' },
-        { status: 400 }
-      );
-    }
-
-    // Menü öğelerini al
+    // Get products from database
     const menuItems = await prisma.menuItem.findMany({
       where: {
         id: {
-          in: items.map(item => item.id),
+          in: items.map((item: { id: number }) => item.id),
         },
+      },
+      select: {
+        id: true,
+        price: true,
       },
     });
 
-    // Toplam tutarı hesapla
-    const totalAmount = menuItems.reduce((total: number, menuItem: MenuItemWithPrice) => {
-      const orderItem = items.find(item => item.id === menuItem.id);
-      return total + (menuItem.price.toNumber() * (orderItem?.quantity || 1));
+    // Convert to MenuItem type with number price
+    const convertedMenuItems: MenuItem[] = menuItems.map(item => ({
+      id: item.id,
+      price: Number(item.price)
+    }));
+
+    // Calculate total amount
+    const totalAmount = convertedMenuItems.reduce((total: number, menuItem: MenuItem) => {
+      const orderItem = items.find((item: OrderItem) => item.id === menuItem.id);
+      return total + (menuItem.price * (orderItem?.quantity || 1));
     }, 0);
 
-    // Siparişi oluştur
+    // Create order
     const order = await prisma.order.create({
       data: {
         status: 'PENDING',
-        customerNote,
         totalAmount: totalAmount.toFixed(2),
         orderItems: {
-          create: items.map((item: { id: number; quantity: number }) => {
-            const menuItem = menuItems.find((mi: MenuItemWithPrice) => mi.id === item.id);
-            const price = menuItem?.price || 0;
+          create: items.map((item: OrderItem) => {
+            const menuItem = convertedMenuItems.find(mi => mi.id === item.id);
             return {
               menuItemId: item.id,
               quantity: item.quantity,
-              unitPrice: typeof price === 'number' ? price.toString() : price.toString(),
+              unitPrice: menuItem ? menuItem.price.toString() : '0',
             };
           }),
         },
@@ -73,18 +76,14 @@ export async function POST(request: Request) {
       },
     });
 
-    // Mutfağa bildirim gönder (WebSocket veya başka bir yöntemle)
-    // TODO: Implement kitchen notification system
-
-    return NextResponse.json({
-      message: 'Sipariş başarıyla oluşturuldu',
-      order,
+    return NextResponse.json({ 
+      message: 'Order created successfully',
+      order 
     });
-
   } catch (error) {
-    console.error('Sipariş hatası:', error);
+    console.error('Order error:', error);
     return NextResponse.json(
-      { error: 'Sipariş oluşturulurken bir hata oluştu' },
+      { error: 'An error occurred while creating the order' },
       { status: 500 }
     );
   }

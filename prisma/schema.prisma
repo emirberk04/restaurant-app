@@ -43,3 +43,16 @@ model OrderItem {
   quantity   Int
   unitPrice  String
 }
+
+model Reservation {
+  id              Int      @id @default(autoincrement())
+  name            String
+  email           String
+  phoneNumber     String
+  date            DateTime
+  time            String
+  numberOfGuests  Int
+  specialRequests String?
+  createdAt       DateTime @default(now())
+  status          String   @default("PENDING")
+}
