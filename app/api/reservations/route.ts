@@ -16,6 +16,7 @@ export async function POST(request: Request) {
     console.log('🚀 REZERVASYON API DEBUG - BAŞLANGIC');
     console.log('🌐 Environment:', process.env.NODE_ENV);
     console.log('🗄️ Database URL exists:', !!process.env.DATABASE_URL);
+    console.log('🗄️ Database URL value:', process.env.DATABASE_URL);
     
     const body = await request.json();
     console.log('📝 Request Body:', body);
@@ -75,6 +76,64 @@ export async function POST(request: Request) {
     };
 
     console.log('🗄️ Database Insert Data:', reservationData);
+
+    // Check if database is available
+    if (!process.env.DATABASE_URL) {
+      console.warn('⚠️ DATABASE_URL not found, using mock data for development');
+      
+      // Create a mock reservation for testing
+      const mockReservation = {
+        id: Date.now(), // Use timestamp as mock ID
+        ...reservationData,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      
+      console.log('🎭 Mock Reservation Created:', mockReservation);
+      
+      // Send email with mock data
+      setTimeout(async () => {
+        try {
+          const emailData = {
+            reservation: {
+              id: mockReservation.id,
+              name: mockReservation.name,
+              email: mockReservation.email,
+              phoneNumber: mockReservation.phoneNumber,
+              date: mockReservation.date.toISOString().split('T')[0],
+              time: mockReservation.time,
+              numberOfGuests: mockReservation.numberOfGuests,
+              specialRequests: mockReservation.specialRequests,
+              status: mockReservation.status
+            }
+          };
+
+          const url = new URL(request.url);
+          const baseUrl = `${url.protocol}//${url.host}`;
+          
+          console.log('📧 Sending email with mock data...');
+          const emailResponse = await fetch(`${baseUrl}/api/send-reservation-email`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(emailData),
+          });
+
+          if (emailResponse.ok) {
+            console.log('✅ Email sent successfully with mock data!');
+          } else {
+            console.error('⚠️ Email sending failed');
+          }
+        } catch (emailError) {
+          console.error('❌ Email sending error:', emailError);
+        }
+      }, 100);
+      
+      return NextResponse.json({
+        message: 'Rezervasyon başarıyla oluşturuldu (development mode)',
+        reservation: mockReservation,
+      });
+    }
+
     console.log('🔗 Attempting to create reservation in database...');
 
     // Test database connection first
