@@ -79,6 +79,45 @@ export async function POST(request: Request) {
     console.log('🗄️ Created Reservation:', reservation);
     console.log('🆔 Reservation ID:', reservation.id);
 
+    // Send email notifications
+    console.log('📧 Attempting to send email notifications...');
+    try {
+      const emailData = {
+        id: reservation.id,
+        name: reservation.name,
+        email: reservation.email,
+        phoneNumber: reservation.phoneNumber,
+        date: reservation.date.toISOString().split('T')[0], // YYYY-MM-DD format
+        time: reservation.time,
+        numberOfGuests: reservation.numberOfGuests,
+        specialRequests: reservation.specialRequests,
+        status: reservation.status
+      };
+
+      console.log('📧 Email Data:', emailData);
+
+      const emailResponse = await fetch(`${request.url.split('/api')[0]}/api/send-reservation-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(emailData),
+      });
+
+      console.log('📧 Email API Response Status:', emailResponse.status);
+      const emailResult = await emailResponse.json();
+      console.log('📧 Email API Response:', emailResult);
+
+      if (!emailResponse.ok) {
+        console.error('⚠️ Email sending failed, but reservation was created');
+      } else {
+        console.log('✅ Email notifications sent successfully!');
+      }
+    } catch (emailError) {
+      console.error('❌ Email sending error:', emailError);
+      console.error('⚠️ Reservation created but email failed');
+    }
+
     // Return success response
     const response = {
       message: 'Rezervasyon başarıyla oluşturuldu',
